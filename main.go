@@ -21,23 +21,37 @@ type Message struct {
 }
 
 type Device interface {
-	ID() string
+	DeviceID() string
 	Name() string
+	Type() string
 }
 
 type TempRHDevice struct {
-	Id         string  `json:"id"`
+	DeviceId   string  `json:"device_id"`
 	DeviceName string  `json:"name,omitempty"`
+	DeviceType string  `json:"device_type"`
 	Temp       float32 `json:"temp,omitempty"`
 	Rh         float32 `json:"rh,omitempty"`
 }
 
-func (t TempRHDevice) ID() string {
-	return t.Id
+func (t TempRHDevice) DeviceID() string {
+	return t.DeviceId
 }
 
 func (t TempRHDevice) Name() string {
 	return t.DeviceName
+}
+
+func (t TempRHDevice) Type() string {
+	return t.DeviceType
+}
+
+func NewTempRHDevice(id string, name string) Device {
+	return &TempRHDevice{
+		DeviceId:   id,
+		DeviceName: name,
+		DeviceType: "TempRH",
+	}
 }
 
 var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
@@ -77,8 +91,9 @@ func generateRandomMessage() Message {
 	msg := Message{
 		Time: time.Now(),
 		Device: TempRHDevice{
-			Id:         "043e5af81c",
+			DeviceId:   "043e5af81c",
 			DeviceName: "Greenhouse",
+			DeviceType: "TempRH",
 			Temp:       76.3 + rand.Float32()*2.5,
 			Rh:         52.9 + rand.Float32()*1.3,
 		},
