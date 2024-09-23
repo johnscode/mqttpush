@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"time"
@@ -13,6 +14,31 @@ const (
 	clientID = "go-mqtt-client"
 	topic    = "iot-messages"
 )
+
+type Message struct {
+	Time   time.Time `json:"time"`
+	Device Device    `json:"device"`
+}
+
+type Device interface {
+	ID() string
+	Name() string
+}
+
+type TempRHDevice struct {
+	Id         string  `json:"id"`
+	DeviceName string  `json:"name,omitempty"`
+	Temp       float32 `json:"temp,omitempty"`
+	Rh         float32 `json:"rh,omitempty"`
+}
+
+func (t TempRHDevice) ID() string {
+	return t.Id
+}
+
+func (t TempRHDevice) Name() string {
+	return t.DeviceName
+}
 
 var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
 	fmt.Println("Connected to MQTT Broker")
@@ -36,22 +62,28 @@ func main() {
 
 	for {
 		message := generateRandomMessage()
-		token := client.Publish(topic, 0, false, message)
+		payload, err := json.MarshalIndent(message, "", "  ")
+		if err != nil {
+			panic(err)
+		}
+		token := client.Publish(topic, 0, false, payload)
 		token.Wait()
-		fmt.Printf("Published message: %s\n", message)
+		fmt.Printf("Published json message: %s\n", payload)
 		time.Sleep(1 * time.Second)
 	}
 }
 
-func generateRandomMessage() string {
-	messages := []string{
-		"Hello, World!",
-		"Greetings from Go!",
-		"MQTT is awesome!",
-		"Random message incoming!",
-		"Go is fun!",
+func generateRandomMessage() Message {
+	msg := Message{
+		Time: time.Now(),
+		Device: TempRHDevice{
+			Id:         "043e5af81c",
+			DeviceName: "Greenhouse",
+			Temp:       76.3 + rand.Float32()*2.5,
+			Rh:         52.9 + rand.Float32()*1.3,
+		},
 	}
-	return messages[rand.Intn(len(messages))]
+	return msg
 }
 
 func init() {
