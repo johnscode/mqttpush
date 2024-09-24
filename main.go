@@ -16,8 +16,10 @@ const (
 )
 
 type Message struct {
-	Time   time.Time `json:"time"`
-	Device Device    `json:"device"`
+	Time       time.Time   `json:"time"`
+	DeviceId   string      `json:"device_id"`
+	DeviceType string      `json:"device_type"`
+	DeviceData interface{} `json:"device_data"`
 }
 
 type Device interface {
@@ -89,13 +91,15 @@ func main() {
 
 func generateRandomMessage() Message {
 	msg := Message{
-		Time: time.Now(),
-		Device: TempRHDevice{
-			DeviceId:   "043e5af81c",
-			DeviceName: "Greenhouse",
-			DeviceType: "TempRH",
-			Temp:       76.3 + rand.Float32()*2.5,
-			Rh:         52.9 + rand.Float32()*1.3,
+		Time:       time.Now(),
+		DeviceId:   "043e5af81c",
+		DeviceType: "TempRH",
+		DeviceData: struct {
+			Temp float32
+			Rh   float32
+		}{
+			Temp: 76.3 + rand.Float32()*2.5,
+			Rh:   52.9 + rand.Float32()*1.3,
 		},
 	}
 	return msg
